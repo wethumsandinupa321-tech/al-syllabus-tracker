@@ -1,0 +1,146 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Sri Lanka A/L Syllabus Tracker</title>
+<style>
+:root{--ink:#172b4d;--muted:#667085;--line:#e4e7ec;--bg:#f6f8fb;--blue:#2457a7;--green:#157347}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.5 system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif}
+header{background:#18324b;color:white;padding:28px 18px 24px}header .wrap,main{max-width:1000px;margin:auto}
+h1{margin:0 0 6px;font-size:clamp(24px,4vw,36px)}header p{margin:4px 0;color:#e0eaf5}
+main{padding:18px}
+.topbar{display:flex;gap:10px;flex-wrap:wrap;align-items:center;justify-content:space-between;margin-bottom:16px}
+select,button{font:inherit;border-radius:10px;padding:10px 12px;border:1px solid #cbd5e1;background:white;color:var(--ink)}
+button{cursor:pointer}button.primary{background:var(--blue);color:white;border-color:var(--blue)}button.danger{color:#a12622}
+.summary{background:white;border:1px solid var(--line);border-radius:14px;padding:16px;margin-bottom:18px}
+.progressrow{display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;font-weight:650}
+progress{width:100%;height:13px;margin-top:10px;accent-color:var(--green)}
+.subject-tabs{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:16px}
+.subject-tabs button.active{background:var(--ink);color:white;border-color:var(--ink)}
+.term{background:white;border:1px solid var(--line);border-radius:14px;margin:12px 0;overflow:hidden}
+.termhead{padding:15px 16px;background:#eef3f9;display:flex;justify-content:space-between;gap:10px;align-items:center;cursor:pointer}
+.termhead h2{font-size:18px;margin:0}.termhead small{color:var(--muted)}
+.termcontent{padding:6px 16px 16px}
+.unit{border-bottom:1px solid var(--line);padding:12px 0}.unit:last-child{border-bottom:0}
+.unit h3{font-size:15px;margin:0 0 8px}
+label.topic{display:flex;gap:10px;align-items:flex-start;padding:6px 0;color:#26364d}
+input[type=checkbox]{width:18px;height:18px;flex:0 0 18px;margin-top:3px;accent-color:var(--green)}
+label.topic.done span{text-decoration:line-through;color:#7b8794}
+.badge{font-size:12px;background:#e8f4ed;color:#146c43;border-radius:999px;padding:3px 8px;white-space:nowrap}
+footer{max-width:1000px;margin:auto;padding:0 18px 28px;color:var(--muted);font-size:13px}
+.empty{padding:25px;color:var(--muted)}
+@media(max-width:560px){main{padding:12px}.termhead{align-items:flex-start}.topbar select{width:100%}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+<h1>🇱🇰 A/L Syllabus Tracker</h1>
+<p>Physics • Chemistry • Combined Mathematics</p>
+<p>Tick topics as you complete them. Progress saves automatically in this browser.</p>
+</div></header>
+<main>
+<div class="topbar">
+<div><label for="grade"><strong>Show grade: </strong></label>
+<select id="grade"><option value="all">Grade 12 + Grade 13</option><option>Grade 12</option><option>Grade 13</option></select>
+</div>
+<div style="display:flex;gap:8px;flex-wrap:wrap"><button id="expand">Expand all</button><button id="collapse">Collapse all</button><button id="reset" class="danger">Reset progress</button></div>
+</div>
+<div class="summary">
+<div class="progressrow"><span id="totalLabel">Overall progress</span><span id="percent">0%</span></div>
+<progress id="progress" max="100" value="0"></progress>
+<div id="count" style="color:#667085;font-size:14px;margin-top:7px">0 of 0 topics completed</div>
+</div>
+<div class="subject-tabs" id="tabs"></div>
+<div id="content"></div>
+</main>
+<footer>
+<p><strong>Important:</strong> This is a personal study tracker based on a suggested term-by-term topic grouping, not an official NIE-issued scheme of work. Check the current NIE syllabus and your school’s term plan for exact coverage.</p>
+<p>Privacy: progress is saved only in this browser’s local storage. It does not automatically sync between devices or browsers.</p>
+</footer>
+<script>
+const DATA = {"Physics": {"Grade 12": {"1st Term": {"Measurement": ["Physical quantities and SI units", "Derived units, prefixes and dimensional analysis", "Measuring instruments, uncertainty, significant figures and errors", "Scalars, vectors and data handling"], "Mechanics": ["Displacement, velocity, acceleration and motion graphs", "Equations of motion and free fall", "Newton’s laws and forces", "Friction and equilibrium"]}, "2nd Term": {"Mechanics": ["Momentum, impulse and conservation of momentum", "Work, energy and power", "Circular motion concepts", "Fluid statics and fluid flow"], "Mechanical Properties of Matter": ["Elasticity, stress, strain and Young’s modulus", "Pressure and properties of fluids", "Viscosity and surface tension"], "Thermal Physics": ["Temperature and thermometry", "Thermal expansion", "Heat capacity, specific heat capacity and calorimetry"]}, "3rd Term": {"Oscillations and Waves": ["Simple harmonic motion", "Wave speed, frequency and wavelength", "Superposition, interference and standing waves", "Sound and resonance"], "Thermal Physics": ["Change of state and latent heat", "Gas laws and ideal gas equation", "Kinetic theory of gases", "Conduction, convection and radiation"]}}, "Grade 13": {"1st Term": {"Gravitational Field": ["Newton’s law of gravitation", "Gravitational field strength and potential", "Orbital motion, satellites and escape velocity"], "Electric Field": ["Electric charge and Coulomb’s law", "Electric field strength and field lines", "Electric potential and potential energy", "Capacitance and stored energy"], "Current Electricity": ["Current, potential difference and resistance", "Ohm’s law and resistance networks", "EMF, internal resistance and cells"]}, "2nd Term": {"Magnetic Field": ["Magnetic forces and moving charges", "Force on current-carrying conductors", "Electromagnetic induction"], "Current Electricity": ["Kirchhoff’s laws and circuit analysis", "Electrical power and energy", "Measuring instruments and practical circuits"], "Electronics": ["Semiconductors and p-n junctions", "Diodes and rectification", "Transistors and basic circuits", "Logic gates and digital electronics"]}, "3rd Term": {"Matter and Radiation": ["Thermal radiation and black-body ideas", "Photoelectric effect and photons", "Atomic models and energy levels", "Radioactivity and half-life", "Nuclear reactions, fission, fusion and radiation safety"], "Final Revision": ["Definitions, laws, units and graphs", "Calculations and structured questions", "Practical and experimental questions", "Timed past papers and review of weak areas"]}}}, "Chemistry": {"Grade 12": {"1st Term": {"Atomic Structure": ["Subatomic particles and atomic models", "Isotopes and mass spectrometry concepts", "Quantum numbers, orbitals and electron configurations", "Periodic trends"], "Structure and Bonding": ["Ionic, covalent and metallic bonding", "Lewis structures, molecular shapes and polarity", "Intermolecular forces and hydrogen bonding", "Structures and properties of solids"], "Chemical Calculations": ["Relative atomic and molecular mass; the mole", "Empirical and molecular formulae", "Balancing equations and stoichiometry"]}, "2nd Term": {"Chemical Calculations": ["Concentration calculations", "Limiting reactants, yields and purity", "Titration calculations and solution preparation"], "Gaseous State": ["Gas laws and ideal gas equation", "Kinetic theory", "Real gases and deviations from ideal behaviour"], "Energetics": ["Enthalpy changes and calorimetry", "Hess’s law and energy cycles", "Bond enthalpy"], "s, p and d Block Elements": ["Periodic trends and characteristic properties", "Selected s- and p-block elements and compounds"]}, "3rd Term": {"s, p and d Block Elements": ["Properties and reactions of selected p-block elements", "Transition elements and d-block chemistry", "Equations, observations and identification tests"], "Basic Organic Chemistry": ["Organic nomenclature and functional groups", "Structural isomerism", "Bond fission and reaction types", "Organic reaction mechanisms"]}}, "Grade 13": {"1st Term": {"Hydrocarbons and Halohydrocarbons": ["Alkanes, alkenes and alkynes: preparation and reactions", "Aromatic hydrocarbons and benzene", "Halohydrocarbons: preparation, properties and reactions"], "Oxygen-Containing Organic Compounds": ["Alcohols, phenols and ethers", "Aldehydes and ketones", "Carboxylic acids and derivatives", "Preparation, reactions, tests and conversions"], "Nitrogen-Containing Organic Compounds": ["Amines and aromatic amines", "Basicity and characteristic reactions", "Diazonium salts and related transformations"]}, "2nd Term": {"Chemical Kinetics": ["Reaction rates and factors affecting rate", "Rate equations, order and rate constants", "Activation energy and reaction mechanisms"], "Equilibrium": ["Dynamic equilibrium and equilibrium constants", "Le Chatelier’s principle", "Acid-base concepts and pH calculations"], "Electrochemistry": ["Electrolytes and conductivity", "Electrochemical cells and electrode potentials", "Cell notation and cell-potential calculations"]}, "3rd Term": {"Equilibrium": ["Buffers and acid-base equilibria", "Solubility equilibrium and solubility product", "Common-ion effect and precipitation calculations", "Phase equilibrium concepts"], "Electrochemistry": ["Electrolysis and Faraday’s laws", "Electrochemical applications and corrosion"], "Industrial Chemistry and Environmental Pollution": ["Industrial chemical processes", "Manufacture of selected industrial chemicals", "Polymers and materials", "Air and water pollution and water treatment"], "Final Revision and Practical Skills": ["Qualitative analysis and laboratory observations", "Chemical equations and calculations", "Organic conversions and reaction conditions", "Timed past papers"]}}}, "Combined Mathematics": {"Grade 12": {"1st Term": {"Pure Mathematics": ["Functions, domain and range", "Quadratic functions and equations", "Polynomials and rational expressions", "Inequalities and modulus", "Trigonometric ratios, identities and equations", "Coordinate geometry: straight lines", "Vectors and position vectors"], "Applied Mathematics": ["Units, dimensions and mathematical modelling", "Straight-line kinematics", "Motion graphs and constant-acceleration equations", "Vectors in mechanics", "Forces and Newton’s laws"]}, "2nd Term": {"Pure Mathematics": ["Trigonometric identities and equations", "Sine rule and cosine rule", "Limits and differentiation", "Differentiation of algebraic and trigonometric functions", "Tangents, normals and rates of change", "Complex numbers: conjugate, modulus and argument"], "Applied Mathematics": ["Resultant forces and equilibrium", "Moments and coplanar forces", "Friction and limiting equilibrium", "Projectiles and two-dimensional motion", "Work, energy and power", "Impulse, momentum and collisions"]}, "3rd Term": {"Pure Mathematics": ["Applications of differentiation", "Stationary points, maxima and minima", "Indefinite integration", "Definite integration and area under curves", "Arithmetic and geometric progressions", "Binomial theorem"], "Applied Mathematics": ["Statics and equilibrium problems", "Connected-particle dynamics where prescribed", "Counting methods and introductory probability", "Descriptive statistics and data interpretation", "Grade 12 revision"]}}, "Grade 13": {"1st Term": {"Pure Mathematics": ["Advanced differentiation and curve sketching", "Integration techniques and applications", "Areas between curves", "Complex numbers and geometric interpretation", "Sequences, series and summation"], "Applied Mathematics": ["Variable-acceleration kinematics", "Newton’s laws in connected systems", "Inclined planes and friction", "Work-energy methods and conservation of energy", "Momentum, impulse and collisions"]}, "2nd Term": {"Pure Mathematics": ["Further functions and equations", "Trigonometric equations and identities", "Vectors and geometry", "Probability and conditional probability as prescribed", "Random variables and probability distributions", "Statistical measures"], "Applied Mathematics": ["Projectiles and relative motion where prescribed", "Statics of rigid bodies and moments", "Equilibrium with friction", "Dynamics and energy/momentum methods", "Applied problem-solving"]}, "3rd Term": {"Pure Mathematics": ["Mixed calculus problems and applications", "Complex numbers and algebra revision", "Sequences, series and binomial theorem revision", "Probability and statistics revision", "Pure mathematics past papers"], "Applied Mathematics": ["Mixed statics and dynamics problems", "Mechanics past papers", "Diagrams, units and mathematical reasoning", "Timed applied mathematics papers"], "Final Exam Preparation": ["Recall formulas and methods from memory", "Timed topic and full-paper practice", "Redo incorrect questions", "Check the current NIE syllabus"]}}}};
+const STORAGE_KEY = "sriLankaALTracker-v1";
+let completed = {};
+try { completed = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}"); } catch(e) { completed = {}; }
+let activeSubject = Object.keys(DATA)[0];
+let openTerms = new Set();
+function key(subject,grade,term,unit,topic){return [subject,grade,term,unit,topic].join("||");}
+function save(){localStorage.setItem(STORAGE_KEY,JSON.stringify(completed)); render();}
+function getFilteredTopics(){
+ let items=[];
+ for(const [subject,grades] of Object.entries(DATA)){
+  if(subject!==activeSubject) continue;
+  for(const [grade,terms] of Object.entries(grades)){
+   const selected=document.getElementById("grade").value;
+   if(selected!=="all"&&grade!==selected)continue;
+   for(const [term,units] of Object.entries(terms)){
+    for(const [unit,topics] of Object.entries(units)){
+     for(const topic of topics)items.push({subject,grade,term,unit,topic,id:key(subject,grade,term,unit,topic)});
+    }
+   }
+  }
+ }
+ return items;
+}
+function renderTabs(){
+ const tabs=document.getElementById("tabs");tabs.innerHTML="";
+ Object.keys(DATA).forEach(s=>{
+  const b=document.createElement("button");b.textContent=s;b.className=s===activeSubject?"active":"";
+  b.onclick=()=>{activeSubject=s;renderTabs();render();};tabs.appendChild(b);
+ });
+}
+function render(){
+ const content=document.getElementById("content");content.innerHTML="";
+ const gradeFilter=document.getElementById("grade").value;
+ const all=[];
+ for(const [subject,grades] of Object.entries(DATA))for(const [grade,terms] of Object.entries(grades)){
+  if(gradeFilter!=="all"&&grade!==gradeFilter)continue;
+  for(const [term,units] of Object.entries(terms))for(const [unit,topics] of Object.entries(units))for(const topic of topics)all.push(key(subject,grade,term,unit,topic));
+ }
+ const done=all.filter(k=>completed[k]).length, pct=all.length?Math.round(done/all.length*100):0;
+ document.getElementById("percent").textContent=pct+"%";
+ document.getElementById("progress").value=pct;
+ document.getElementById("count").textContent=done+" of "+all.length+" topics completed across all subjects";
+ const grades=DATA[activeSubject];
+ for(const [grade,terms] of Object.entries(grades)){
+  if(gradeFilter!=="all"&&grade!==gradeFilter)continue;
+  for(const [term,units] of Object.entries(terms)){
+   const termId=activeSubject+"||"+grade+"||"+term;
+   const termTopics=[];
+   for(const [unit,topics] of Object.entries(units))for(const topic of topics)termTopics.push(key(activeSubject,grade,term,unit,topic));
+   const termDone=termTopics.filter(k=>completed[k]).length;
+   const section=document.createElement("section");section.className="term";
+   const head=document.createElement("div");head.className="termhead";head.setAttribute("role","button");head.tabIndex=0;
+   const h=document.createElement("h2");h.textContent=grade+" — "+term;
+   const meta=document.createElement("small");meta.textContent=termDone+" / "+termTopics.length+" complete";
+   head.append(h,meta);
+   const body=document.createElement("div");body.className="termcontent";
+   const expanded=openTerms.has(termId);
+   body.style.display=expanded?"block":"none";
+   function toggle(){if(openTerms.has(termId))openTerms.delete(termId);else openTerms.add(termId);body.style.display=openTerms.has(termId)?"block":"none";}
+   head.onclick=toggle;head.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();toggle();}};
+   for(const [unit,topics] of Object.entries(units)){
+    const u=document.createElement("div");u.className="unit";
+    const uh=document.createElement("h3");uh.textContent=unit;u.appendChild(uh);
+    for(const topic of topics){
+     const id=key(activeSubject,grade,term,unit,topic);
+     const label=document.createElement("label");label.className="topic"+(completed[id]?" done":"");
+     const cb=document.createElement("input");cb.type="checkbox";cb.checked=!!completed[id];
+     cb.onchange=()=>{completed[id]=cb.checked;if(!cb.checked)delete completed[id];save();};
+     const span=document.createElement("span");span.textContent=topic;
+     label.append(cb,span);u.appendChild(label);
+    }
+    body.appendChild(u);
+   }
+   section.append(head,body);content.appendChild(section);
+  }
+ }
+}
+document.getElementById("grade").addEventListener("change",render);
+document.getElementById("expand").onclick=()=>{for(const [g,terms] of Object.entries(DATA[activeSubject]))for(const t of Object.keys(terms))openTerms.add(activeSubject+"||"+g+"||"+t);render();};
+document.getElementById("collapse").onclick=()=>{openTerms.clear();render();};
+document.getElementById("reset").onclick=()=>{if(confirm("Reset every completed topic? This cannot be undone.")){completed={};save();}};
+renderTabs();render();
+</script>
+</body></html>
